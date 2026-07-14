@@ -1,3 +1,2 @@
-from django.db import models
-
-# Create your models here.
+# apps/games/models.py
+from .infra.models import Game, Genre, LibraryEntry  # noqa: F401
