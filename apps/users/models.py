@@ -1,3 +1,2 @@
-from django.db import models
-
-# Create your models here.
+# apps/users/models.py
+from .infra.models import UserManager, User  # noqa: F401
