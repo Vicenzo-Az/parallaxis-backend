@@ -1,22 +1,11 @@
-"""
-Models Django do bounded context `games`.
-
-Mapeia fielmente docs/database-model.md:
-- Game (UUID PK, igdb_id UNIQUE, ratings 0-100 com CheckConstraint)
-- Genre (UUID PK, name UNIQUE)
-- LibraryEntry (UUID PK, FK user CASCADE, FK game RESTRICT, UNIQUE
-  (user, game) para RN01, CheckConstraint de score 1-10 e de score
-  condicional ao status para RN02)
-
-Lembrete: as CheckConstraint do Meta.constraints são a aplicação real das
-regras de negócio no nível de banco — não é redundante com a validação do
-use case, é uma segunda linha de defesa (defesa em profundidade).
-"""
-
 import uuid
 
 from django.db import models
 from django.db.models.functions import Length
+from django.db.models import Q
+
+
+models.TextField.register_lookup(Length)
 
 
 class Genre(models.Model):
@@ -96,9 +85,9 @@ class LibraryEntry(models.Model):
             ),
             models.CheckConstraint(
                 check=models.Q(review__isnull=True) | models.Q(
-                    review_length__lte=8000),
+                    review__length__lte=8000),
                 name="review_max_length",
-                violation_error_message="Review não pode ultrapassar 8000 caracteres.",
+                violation_error_message="Review must not exceed 8000 characters.",
             ),
         ]
 
