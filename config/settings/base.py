@@ -8,7 +8,8 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 
-load_dotenv()
+# carrega .env na memória, para que os valores fiquem disponíveis em os.environ
+load_dotenv(encoding="utf-8")
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
