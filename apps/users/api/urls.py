@@ -3,7 +3,7 @@ Rotas do bounded context `users`, incluídas em config/urls.py sob /api/users/.
 
 A implementar conforme as views forem criadas em views.py.
 """
-from django.urls import path
+# from django.urls import path
 
 app_name = "users"
 
