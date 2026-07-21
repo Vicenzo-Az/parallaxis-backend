@@ -2,8 +2,6 @@ import uuid
 
 from django.db import models
 from django.db.models.functions import Length
-from django.db.models import Q
-
 
 models.TextField.register_lookup(Length)
 
@@ -32,12 +30,12 @@ class Game(models.Model):
     class Meta:
         constraints = [
             models.CheckConstraint(
-                check=models.Q(critic_rating__isnull=True)
+                condition=models.Q(critic_rating__isnull=True)
                 | (models.Q(critic_rating__gte=0) & models.Q(critic_rating__lte=100)),
                 name="critic_rating_range",
             ),
             models.CheckConstraint(
-                check=models.Q(community_rating__isnull=True)
+                condition=models.Q(community_rating__isnull=True)
                 | (models.Q(community_rating__gte=0) & models.Q(community_rating__lte=100)),
                 name="community_rating_range",
             ),
@@ -73,18 +71,18 @@ class LibraryEntry(models.Model):
             models.UniqueConstraint(
                 fields=["user", "game"], name="unique_user_game"),
             models.CheckConstraint(
-                check=models.Q(score__isnull=True)
+                condition=models.Q(score__isnull=True)
                 | (models.Q(score__gte=1) & models.Q(score__lte=10)),
                 name="score_range",
             ),
             models.CheckConstraint(
-                check=~models.Q(
+                condition=~models.Q(
                     status__in=[EntryStatus.COMPLETED, EntryStatus.ABANDONED])
                 | models.Q(score__isnull=False),
                 name="score_required_when_finished",
             ),
             models.CheckConstraint(
-                check=models.Q(review__isnull=True) | models.Q(
+                condition=models.Q(review__isnull=True) | models.Q(
                     review__length__lte=8000),
                 name="review_max_length",
                 violation_error_message="Review must not exceed 8000 characters.",
