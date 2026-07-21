@@ -112,7 +112,8 @@ REST_FRAMEWORK = {
     ),
     "DEFAULT_PERMISSION_CLASSES": (
         "rest_framework.permissions.IsAuthenticated",
-        # default seguro — cada view que precisar de exceção declara explicitamente (ver checklist de segurança)
+        # default seguro — cada view que precisar de exceção declara
+        # explicitamente (ver checklist de segurança)
     ),
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
 }
