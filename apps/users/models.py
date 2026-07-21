@@ -1,2 +1,2 @@
 # apps/users/models.py
-from .infra.models import UserManager, User  # noqa: F401
+from .infra.models import User, UserManager  # noqa: F401
