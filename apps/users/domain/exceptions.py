@@ -16,3 +16,7 @@ class InvalidCredentialsError(Exception):
 
 class EmailAlreadyRegisteredError(Exception):
     """Levantada ao tentar registrar um e-mail que já existe (RN de unicidade)."""
+
+
+class UserNotFoundError(Exception):
+    """Levantada ao tentar acessar um usuário que não existe (RN de existência)."""
