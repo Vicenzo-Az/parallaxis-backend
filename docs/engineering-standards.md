@@ -15,10 +15,11 @@ Pirâmide de testes adaptada ao porte do projeto — mais peso na base (rápido,
 
 ## 2. Convenções de Código
 
-| Linguagem  | Lint/Format                                          | Configuração                 |
-| ---------- | ---------------------------------------------------- | ---------------------------- |
-| Python     | `ruff` (lint + format, substitui flake8+black+isort) | `pyproject.toml`, roda no CI |
-| TypeScript | `eslint` + `prettier`                                | `.eslintrc`, roda no CI      |
+| Linguagem    | Lint/Format                                            | Configuração                   |
+| ------------ | ------------------------------------------------------ | ------------------------------ |
+| Python       | `ruff` (lint + format, substitui flake8+black+isort)   | `pyproject.toml`, roda no CI   |
+| TypeScript   | `eslint` + `prettier`                                  | `.eslintrc`, roda no CI        |
+| ------------ | ------------------------------------------------------ | ------------------------------ |
 
 Nomenclatura: classes de use case em inglês e verbo-sujeito (`RateGameUseCase`, não `GameRater`); nomes de branch, commits e documentação em português (consistente com o restante do projeto); nomes de variável/função em inglês no código (padrão de mercado), mensagens de erro voltadas ao usuário em português.
 
@@ -28,14 +29,14 @@ Nomenclatura: classes de use case em inglês e verbo-sujeito (`RateGameUseCase`,
 
 **GitHub Flow** (já registrado no ADR010): branch curta a partir da `main` por funcionalidade/correção, Pull Request obrigatório mesmo trabalhando sozinho (força revisão própria antes do merge — hábito profissional real), merge direto na `main` após CI passar.
 
-**Padrão de commit:** Conventional Commits, mensagens em português — mesmo padrão que você já usa:
+**Padrão de commit:** Conventional Commits, mensagens em inglês:
 
-```
-feat: adiciona busca de jogos via IGDB
-fix: corrige endpoint de refresh do token JWT
-docs: adiciona MER do banco de dados
-test: cobre RateGameUseCase com casos de RN02
-refactor: extrai normalização de escala para lib compartilhada
+```bash
+feat: add search for games via IGDB
+fix: fix refresh token endpoint
+docs: add MER of the database
+test: cover RateGameUseCase with RN02 test cases
+refactor: extract scale normalization to a shared library
 ```
 
 **Nomenclatura de branch:** `feat/busca-jogos-igdb`, `fix/refresh-token-endpoint`.
