@@ -22,13 +22,15 @@ Pirâmide de testes adaptada ao porte do projeto — mais peso na base (rápido,
 
 Nomenclatura: classes de use case em inglês e verbo-sujeito (`RateGameUseCase`, não `GameRater`); nomes de branch, commits e documentação em português (consistente com o restante do projeto); nomes de variável/função em inglês no código (padrão de mercado), mensagens de erro voltadas ao usuário em português.
 
+**Documentação de API obrigatória por view:** toda view baseada em `APIView` deve declarar `@extend_schema` (drf-spectacular) com o serializer de entrada e a especificação de resposta. Sem isso, o Swagger não gera o formulário de "Try it out", mesmo que o endpoint funcione corretamente via `curl`/cliente HTTP direto — a API funciona, mas fica sem valor prático como ferramenta de teste manual. View nova sem `@extend_schema` é sinal de tarefa incompleta, não só documentação pendente — mesmo critério de "pronto" que as metas de teste da seção 1.
+
 ## 3. Estratégia de Versionamento
 
 **GitHub Flow** (já registrado no ADR010): branch curta a partir da `main` por funcionalidade/correção, Pull Request obrigatório mesmo trabalhando sozinho (força revisão própria antes do merge — hábito profissional real), merge direto na `main` após CI passar.
 
 **Padrão de commit:** Conventional Commits, mensagens em português — mesmo padrão que você já usa:
 
-```bash
+```
 feat: adiciona busca de jogos via IGDB
 fix: corrige endpoint de refresh do token JWT
 docs: adiciona MER do banco de dados
@@ -76,3 +78,11 @@ Nível proporcional ao porte do projeto — sem exagerar em ferramental para uma
 - Eventos obrigatórios de log: falha de autenticação, falha de integração com IGDB (timeout, erro de token), exceções não tratadas nos use cases.
 - **Nunca logar dados sensíveis**: senha, token JWT, review completa do usuário (só metadados como `user_id`, `game_id`, timestamp).
 - Sentry fica como _stretch goal_ documentado no roadmap, não obrigatório para o MVP — adicionar exige conta externa e configuração extra que não é o foco central da demonstração técnica deste projeto.
+
+---
+
+Com isso, a fase de planejamento técnico está **completa**: requisitos, modelo de domínio, MER, arquitetura, ADRs, estrutura de pastas e padrões de engenharia — os 8 documentos que definimos no início.
+
+Falta um único artefato antes do código: o **MVP e Roadmap** formal, que vai cortar precisamente o que entra na v1 (incluindo decidir onde a landing page que você mencionou entra) e o que fica para depois. Seguimos para ele?
+
+Falta um único artefato antes do código: o **MVP e Roadmap** formal, que vai cortar precisamente o que entra na v1 (incluindo decidir onde a landing page que você mencionou entra) e o que fica para depois. Seguimos para ele?
