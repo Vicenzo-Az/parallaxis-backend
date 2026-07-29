@@ -20,3 +20,7 @@ class EmailAlreadyRegisteredError(Exception):
 
 class UserNotFoundError(Exception):
     """Levantada ao tentar acessar um usuário que não existe (RN de existência)."""
+
+
+class SamePasswordError(Exception):
+    """Levantada ao tentar alterar a senha para a mesma senha antiga (RN de alteração de senha)."""
