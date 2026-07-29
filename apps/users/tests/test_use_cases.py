@@ -11,10 +11,18 @@ Padrão Arrange-Act-Assert:
 """
 import pytest
 
-from apps.users.domain.exceptions import EmailAlreadyRegisteredError
+from apps.users.domain.exceptions import (
+    EmailAlreadyRegisteredError,
+    InvalidCredentialsError,
+    SamePasswordError,
+    UserNotFoundError,
+)
 from apps.users.tests.fakes import FakeUserRepository
+from apps.users.use_cases.change_password import ChangePasswordUseCase
 from apps.users.use_cases.register_user import RegisterUserUseCase
+from apps.users.use_cases.update_profile import UpdateProfileUseCase
 
+# RegisterUserUseCase
 
 def test_register_user_creates_user_with_valid_data():
     fake_user_repository = FakeUserRepository()
@@ -64,3 +72,89 @@ def test_register_user_allows_different_email_after_duplicate_rejection():
 
     assert user.email == "jane.doe@example.com"
     assert fake_user_repository.is_email_registered("jane.doe@example.com")
+
+
+# UpdateProfileUseCase
+
+def test_update_profile_changes_name(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = UpdateProfileUseCase(user_repository=fake_repo)
+    updated = use_case.execute(user.id, name="John Updated")
+
+    assert updated.name == "John Updated"
+
+
+def test_update_profile_changes_email_when_available(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = UpdateProfileUseCase(user_repository=fake_repo)
+    updated = use_case.execute(user.id, email="john@updated.com")
+
+    assert updated.email == "john@updated.com"
+
+
+def test_update_profile_raises_when_new_email_already_registered(existing_user):
+    fake_repo, user = existing_user
+    fake_repo.create(email="taken@example.com",
+                     name="Other User", password="senha456")
+
+    use_case = UpdateProfileUseCase(user_repository=fake_repo)
+
+    with pytest.raises(EmailAlreadyRegisteredError):
+        use_case.execute(user.id, email="taken@example.com")
+
+    assert user.email == "john@example.com"
+
+
+def test_update_profile_allows_keeping_same_email(existing_user):
+    # este é o teste que prova que a armadilha do e-mail duplicado
+    # está genuinamente resolvida — não é opcional, é o teste mais
+    # importante desse use case
+    fake_repo, user = existing_user
+
+    use_case = UpdateProfileUseCase(user_repository=fake_repo)
+    updated = use_case.execute(user.id, email="john@example.com")
+
+    assert updated.email == "john@example.com"
+
+
+def test_update_profile_raises_when_user_not_found(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = UpdateProfileUseCase(user_repository=fake_repo)
+
+    with pytest.raises(UserNotFoundError):
+        use_case.execute(user_id=999, name="New Name")
+
+
+# ChangePasswordUseCase
+
+def test_change_password_succeeds_with_correct_old_password(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = ChangePasswordUseCase(user_repository=fake_repo)
+    use_case.execute(user.id, old_password="senha123",
+                     new_password="nova_senha456")
+
+    assert fake_repo.verify_password(user.id, "nova_senha456")
+
+
+def test_change_password_raises_when_old_password_is_wrong(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = ChangePasswordUseCase(user_repository=fake_repo)
+
+    with pytest.raises(InvalidCredentialsError):
+        use_case.execute(user.id, old_password="senha_errada",
+                         new_password="nova_senha456")
+
+
+def test_change_password_raises_when_new_password_equals_old(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = ChangePasswordUseCase(user_repository=fake_repo)
+
+    with pytest.raises(SamePasswordError):
+        use_case.execute(user.id, old_password="senha123",
+                         new_password="senha123")
