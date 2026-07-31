@@ -1,5 +1,6 @@
 import pytest
 
+from apps.users.infra.repositories import DjangoUserRepository
 from apps.users.tests.fakes import FakeUserRepository
 
 
@@ -9,3 +10,10 @@ def existing_user():
     user = fake_repo.create(email="john@example.com",
                             name="John", password="senha123")
     return fake_repo, user
+
+
+@pytest.fixture
+def existing_django_user():
+    return DjangoUserRepository().create(
+        email="test@example.com", name="Test User", password="testpassword"
+    )
