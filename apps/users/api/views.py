@@ -1,29 +1,33 @@
 """
 Views da API do bounded context `users` — RF01-RF05.
 
-A implementar:
-- RegisterView (POST /api/users/register/)
-- Login e refresh: reaproveitar TokenObtainPairView / TokenRefreshView do
-  simplejwt diretamente em config/urls.py, não precisa view própria.
-- ProfileView (GET/PATCH /api/users/me/) — RF04
-- ChangePasswordView (POST /api/users/me/change-password/) — RF05
-- DeleteAccountView (DELETE /api/users/me/) — RN07
+Implementado: RegisterView, ProfileView, ChangePasswordView.
+Login e refresh: reaproveitados de TokenObtainPairView/TokenRefreshView do
+simplejwt, registrados direto em config/urls.py — não têm view própria aqui.
 
-Lembrete de segurança: TODA view aqui deve declarar `permission_classes`
-explicitamente, mesmo que seja igual ao default — nunca depender do
-comportamento implícito (ver checklist em docs/engineering-standards.md,
-item que corrige a falha real do projeto anterior).
+A implementar:
+- DeleteAccountView (DELETE /api/users/me/) — RN07
 """
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.users.api.serializers import RegisterSerializer
-from apps.users.domain.exceptions import EmailAlreadyRegisteredError
+from apps.users.api.serializers import (
+    ChangePasswordSerializer,
+    ProfileSerializer,
+    RegisterSerializer,
+)
+from apps.users.domain.exceptions import (
+    EmailAlreadyRegisteredError,
+    InvalidCredentialsError,
+    SamePasswordError,
+)
 from apps.users.infra.repositories import DjangoUserRepository
+from apps.users.use_cases.change_password import ChangePasswordUseCase
 from apps.users.use_cases.register_user import RegisterUserUseCase
+from apps.users.use_cases.update_profile import UpdateProfileUseCase
 
 
 class RegisterView(APIView):
@@ -48,3 +52,68 @@ class RegisterView(APIView):
             "email": user.email,
         }
         return Response(response_data, status=status.HTTP_201_CREATED)
+
+
+class ProfileView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(responses=ProfileSerializer)
+    def get(self, request):
+        repository = DjangoUserRepository()
+        user = repository.get_by_id(request.user.id)
+
+        serializer = ProfileSerializer(user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(request=ProfileSerializer, responses=ProfileSerializer)
+    def patch(self, request):
+        serializer = ProfileSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+
+        use_case = UpdateProfileUseCase(user_repository=DjangoUserRepository())
+
+        try:
+            updated_user = use_case.execute(
+                user_id=request.user.id,
+                name=serializer.validated_data.get("name"),
+                email=serializer.validated_data.get("email"),
+            )
+        except EmailAlreadyRegisteredError:
+            return Response(
+                {"email": "Já existe uma conta com este e-mail."},
+                status=status.HTTP_409_CONFLICT,
+            )
+
+        response_serializer = ProfileSerializer(updated_user)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+
+class ChangePasswordView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=ChangePasswordSerializer, responses={204: None})
+    def post(self, request):
+        serializer = ChangePasswordSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        use_case = ChangePasswordUseCase(
+            user_repository=DjangoUserRepository())
+
+        try:
+            use_case.execute(
+                user_id=request.user.id,
+                old_password=serializer.validated_data["old_password"],
+                new_password=serializer.validated_data["new_password"],
+            )
+        except InvalidCredentialsError:
+            return Response(
+                {"old_password": "Senha atual incorreta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        except SamePasswordError:
+            return Response(
+                {"new_password": "A nova senha não pode ser igual à atual."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
