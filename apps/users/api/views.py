@@ -1,12 +1,6 @@
 """
 Views da API do bounded context `users` — RF01-RF05.
 
-Implementado: RegisterView, ProfileView, ChangePasswordView.
-Login e refresh: reaproveitados de TokenObtainPairView/TokenRefreshView do
-simplejwt, registrados direto em config/urls.py — não têm view própria aqui.
-
-A implementar:
-- DeleteAccountView (DELETE /api/users/me/) — RN07
 """
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -16,6 +10,7 @@ from rest_framework.views import APIView
 
 from apps.users.api.serializers import (
     ChangePasswordSerializer,
+    DeleteAccountSerializer,
     ProfileSerializer,
     RegisterSerializer,
 )
@@ -26,6 +21,7 @@ from apps.users.domain.exceptions import (
 )
 from apps.users.infra.repositories import DjangoUserRepository
 from apps.users.use_cases.change_password import ChangePasswordUseCase
+from apps.users.use_cases.delete_account import DeleteAccountUseCase
 from apps.users.use_cases.register_user import RegisterUserUseCase
 from apps.users.use_cases.update_profile import UpdateProfileUseCase
 
@@ -86,6 +82,26 @@ class ProfileView(APIView):
 
         response_serializer = ProfileSerializer(updated_user)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
+
+    @extend_schema(request=DeleteAccountSerializer, responses={204: None})
+    def delete(self, request):
+        serializer = DeleteAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        use_case = DeleteAccountUseCase(user_repository=DjangoUserRepository())
+
+        try:
+            use_case.execute(
+                user_id=request.user.id,
+                password=serializer.validated_data["password"],
+            )
+        except InvalidCredentialsError:
+            return Response(
+                {"password": "Senha incorreta."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class ChangePasswordView(APIView):
