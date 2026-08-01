@@ -1,10 +1,6 @@
 """
 Repositório concreto do bounded context `users`.
 
-A implementar:
-- DjangoUserRepository, implementando os métodos que os use cases de
-  apps/users/use_cases/*.py esperam (ex: get_by_email, save, delete).
-
 Este é o adapter entre o ORM do Django (models.py) e os use cases, que não
 devem conhecer o ORM diretamente.
 """
@@ -76,3 +72,12 @@ class DjangoUserRepository:
             name=django_user.name,
             created_at=django_user.created_at,
         )
+
+    def delete(self, user_id) -> None:
+        try:
+            django_user = DjangoUser.objects.get(id=user_id)
+        except DjangoUser.DoesNotExist:
+            raise UserNotFoundError(
+                f"Usuário com id {user_id} não encontrado.") from None
+
+        django_user.delete()
