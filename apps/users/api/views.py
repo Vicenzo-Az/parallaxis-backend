@@ -1,6 +1,10 @@
 """
-Views da API do bounded context `users` — RF01-RF05.
+Views da API do bounded context `users` — RF01-RF05, RN07.
 
+Implementado: RegisterView, ProfileView (GET/PATCH), ChangePasswordView,
+DeleteAccountView.
+Login e refresh: reaproveitados de TokenObtainPairView/TokenRefreshView do
+simplejwt, registrados direto em config/urls.py — não têm view própria aqui.
 """
 from drf_spectacular.utils import extend_schema
 from rest_framework import status
@@ -83,26 +87,6 @@ class ProfileView(APIView):
         response_serializer = ProfileSerializer(updated_user)
         return Response(response_serializer.data, status=status.HTTP_200_OK)
 
-    @extend_schema(request=DeleteAccountSerializer, responses={204: None})
-    def delete(self, request):
-        serializer = DeleteAccountSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        use_case = DeleteAccountUseCase(user_repository=DjangoUserRepository())
-
-        try:
-            use_case.execute(
-                user_id=request.user.id,
-                password=serializer.validated_data["password"],
-            )
-        except InvalidCredentialsError:
-            return Response(
-                {"password": "Senha incorreta."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class ChangePasswordView(APIView):
     permission_classes = [IsAuthenticated]
@@ -129,6 +113,30 @@ class ChangePasswordView(APIView):
         except SamePasswordError:
             return Response(
                 {"new_password": "A nova senha não pode ser igual à atual."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class DeleteAccountView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    @extend_schema(request=DeleteAccountSerializer, responses={204: None})
+    def post(self, request):
+        serializer = DeleteAccountSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        use_case = DeleteAccountUseCase(user_repository=DjangoUserRepository())
+
+        try:
+            use_case.execute(
+                user_id=request.user.id,
+                password=serializer.validated_data["password"],
+            )
+        except InvalidCredentialsError:
+            return Response(
+                {"password": "Senha incorreta."},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
