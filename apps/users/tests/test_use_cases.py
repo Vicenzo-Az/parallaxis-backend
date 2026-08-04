@@ -19,6 +19,7 @@ from apps.users.domain.exceptions import (
 )
 from apps.users.tests.fakes import FakeUserRepository
 from apps.users.use_cases.change_password import ChangePasswordUseCase
+from apps.users.use_cases.delete_account import DeleteAccountUseCase
 from apps.users.use_cases.register_user import RegisterUserUseCase
 from apps.users.use_cases.update_profile import UpdateProfileUseCase
 
@@ -158,3 +159,22 @@ def test_change_password_raises_when_new_password_equals_old(existing_user):
     with pytest.raises(SamePasswordError):
         use_case.execute(user.id, old_password="senha123",
                          new_password="senha123")
+
+
+# DeleteAccountUseCase
+
+def test_delete_account_removes_user_with_correct_password(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = DeleteAccountUseCase(user_repository=fake_repo)
+    use_case.execute(user.id, password="senha123")
+
+    assert not fake_repo.is_email_registered(user.email)
+
+
+def test_delete_account_raises_when_password_is_wrong(existing_user):
+    fake_repo, user = existing_user
+
+    use_case = DeleteAccountUseCase(user_repository=fake_repo)
+    with pytest.raises(InvalidCredentialsError):
+        use_case.execute(user.id, password="wrong123")

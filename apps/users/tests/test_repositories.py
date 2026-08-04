@@ -116,3 +116,21 @@ def test_set_password_updates_hash_in_database(existing_django_user):
 
     assert refreshed.password != "newpassword"
     assert refreshed.check_password("newpassword")
+
+
+# delete
+
+@pytest.mark.django_db
+def test_delete_removes_user_from_database(existing_django_user):
+    DjangoUserRepository().delete(existing_django_user.id)
+
+    with pytest.raises(UserNotFoundError):
+        DjangoUserRepository().get_by_id(existing_django_user.id)
+
+    assert not DjangoUser.objects.filter(id=existing_django_user.id).exists()
+
+
+@pytest.mark.django_db
+def test_delete_raises_when_user_not_found():
+    with pytest.raises(UserNotFoundError):
+        DjangoUserRepository().delete(uuid4())

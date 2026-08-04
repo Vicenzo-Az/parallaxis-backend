@@ -59,3 +59,10 @@ class FakeUserRepository:
             raise UserNotFoundError(
                 f"Usuário com id {user_id} não encontrado.")
         self._passwords[user_id] = new_password
+
+    def delete(self, user_id) -> None:
+        if user_id not in self._users:
+            raise UserNotFoundError(
+                f"Usuário com id {user_id} não encontrado.")
+        del self._users[user_id]
+        del self._passwords[user_id]
